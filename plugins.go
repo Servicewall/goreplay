@@ -143,6 +143,8 @@ func NewPlugins() *InOutPlugins {
 		}
 	}
 
+	println(Settings.OutputHTTPConfig.SwApi, Settings.OutputHTTPConfig.SwSource)
+
 	for _, options := range Settings.OutputHTTP {
 		plugins.registerPlugin(NewHTTPOutput, options, &Settings.OutputHTTPConfig)
 	}
@@ -157,6 +159,14 @@ func NewPlugins() *InOutPlugins {
 
 	if Settings.InputKafkaConfig.Host != "" && Settings.InputKafkaConfig.Topic != "" {
 		plugins.registerPlugin(NewKafkaInput, "", &Settings.InputKafkaConfig, &Settings.KafkaTLSConfig)
+	}
+
+	if Settings.OutputKafkaConfig.Host != "" && Settings.OutputKafkaConfig.SwSource != "" {
+		plugins.registerPlugin(NewKafkaSwOutput, "", &Settings.OutputKafkaConfig, &Settings.KafkaTLSConfig)
+	}
+
+	if Settings.OutputHTTPConfig.SwApi != "" && Settings.OutputHTTPConfig.SwSource != "" {
+		plugins.registerPlugin(NewHTTPSwOutput, "", &Settings.OutputHTTPConfig)
 	}
 
 	return plugins
