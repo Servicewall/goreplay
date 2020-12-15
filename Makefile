@@ -65,6 +65,13 @@ install:
 build:
 	docker build -t $(CONTAINER) -f Dockerfile.dev .
 
+linux:
+	docker build -t docker.servicewall.cn/goreplay -f Dockerfile.sw .
+	docker push docker.servicewall.cn/goreplay
+	docker run -d --name temp-goreplay docker.servicewall.cn/goreplay --input-raw :8000 --output-stdout
+	docker cp temp-goreplay:/goreplay ./goreplay_linux
+	docker rm -f temp-goreplay
+
 profile:
 	go build && ./$(BIN_NAME) --output-http="http://localhost:9000" --input-dummy 0 --input-raw :9000 --input-http :9000 --memprofile=./mem.out --cpuprofile=./cpu.out --stats --output-http-stats --output-http-timeout 100ms
 
