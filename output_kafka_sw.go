@@ -26,6 +26,9 @@ const KafkaSwOutputFrequency = 500
 func NewKafkaSwOutput(address string, config *OutputKafkaConfig, tlsConfig *KafkaTLSConfig) PluginWriter {
 	c := NewKafkaConfig(tlsConfig)
 
+	//SW
+	println("SW-HTTP", config.Host, config.SwSource)
+
 	var producer sarama.AsyncProducer
 
 	if mock, ok := config.producer.(*mocks.AsyncProducer); ok && mock != nil {

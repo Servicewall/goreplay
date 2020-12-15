@@ -70,6 +70,10 @@ type HTTPOutputSw struct {
 func NewHTTPSwOutput(address string, config *HTTPOutputConfig) PluginReadWriter {
 	o := new(HTTPOutputSw)
 	var err error
+
+	//SW
+	println("SW-HTTP", config.SwApi, config.SwSource)
+
 	config.url, err = url.Parse(config.SwApi)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("[OUTPUT-HTTP] parse HTTP output URL error[%q]", err))

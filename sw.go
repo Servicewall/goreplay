@@ -100,6 +100,7 @@ func buildRequestBody(source string, mimeHeader map[string][]string, meta [][]by
 	data, _ := json.Marshal(body)
 	//SW: DEBUG
 	os.Stdout.Write(data)
+	os.Stdout.Write([]byte{'\n'})
 
 	return data
 }

@@ -143,8 +143,6 @@ func NewPlugins() *InOutPlugins {
 		}
 	}
 
-	println(Settings.OutputHTTPConfig.SwApi, Settings.OutputHTTPConfig.SwSource)
-
 	for _, options := range Settings.OutputHTTP {
 		plugins.registerPlugin(NewHTTPOutput, options, &Settings.OutputHTTPConfig)
 	}
