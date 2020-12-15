@@ -14,16 +14,16 @@ import (
 )
 
 // KafkaOutput is used for sending payloads to kafka in JSON format.
-type KafkaOutput struct {
+type KafkaSwOutput struct {
 	config   *OutputKafkaConfig
 	producer sarama.AsyncProducer
 }
 
 // KafkaOutputFrequency in milliseconds
-const KafkaOutputFrequency = 500
+const KafkaSwOutputFrequency = 500
 
 // NewKafkaOutput creates instance of kafka producer client  with TLS config
-func NewKafkaOutput(address string, config *OutputKafkaConfig, tlsConfig *KafkaTLSConfig) PluginWriter {
+func NewKafkaSwOutput(address string, config *OutputKafkaConfig, tlsConfig *KafkaTLSConfig) PluginWriter {
 	c := NewKafkaConfig(tlsConfig)
 
 	var producer sarama.AsyncProducer
@@ -33,7 +33,7 @@ func NewKafkaOutput(address string, config *OutputKafkaConfig, tlsConfig *KafkaT
 	} else {
 		c.Producer.RequiredAcks = sarama.WaitForLocal
 		c.Producer.Compression = sarama.CompressionSnappy
-		c.Producer.Flush.Frequency = KafkaOutputFrequency * time.Millisecond
+		c.Producer.Flush.Frequency = KafkaSwOutputFrequency * time.Millisecond
 
 		brokerList := strings.Split(config.Host, ",")
 
@@ -44,7 +44,7 @@ func NewKafkaOutput(address string, config *OutputKafkaConfig, tlsConfig *KafkaT
 		}
 	}
 
-	o := &KafkaOutput{
+	o := &KafkaSwOutput{
 		config:   config,
 		producer: producer,
 	}
@@ -56,43 +56,29 @@ func NewKafkaOutput(address string, config *OutputKafkaConfig, tlsConfig *KafkaT
 }
 
 // ErrorHandler should receive errors
-func (o *KafkaOutput) ErrorHandler() {
+func (o *KafkaSwOutput) ErrorHandler() {
 	for err := range o.producer.Errors() {
 		Debug(1, "Failed to write access log entry:", err)
 	}
 }
 
 // PluginWrite writes a message to this plugin
-func (o *KafkaOutput) PluginWrite(msg *Message) (n int, err error) {
+func (o *KafkaSwOutput) PluginWrite(msg *Message) (n int, err error) {
 	var message sarama.StringEncoder
 
-	if !o.config.UseJSON {
-		message = sarama.StringEncoder(byteutils.SliceToString(msg.Meta) + byteutils.SliceToString(msg.Data))
-	} else {
-		mimeHeader := proto.ParseHeaders(msg.Data)
-		header := make(map[string]string)
-		for k, v := range mimeHeader {
-			header[k] = strings.Join(v, ", ")
-		}
+	mimeHeader := proto.ParseHeaders(msg.Data)
+	meta := payloadMeta(msg.Meta)
+	req := msg.Data
 
-		meta := payloadMeta(msg.Meta)
-		req := msg.Data
+	//SW: Data
+	kafkaMessage := buildSwMessage(o.config.SwSource, mimeHeader, meta, req)
 
-		kafkaMessage := KafkaMessage{
-			ReqURL:     byteutils.SliceToString(proto.Path(req)),
-			ReqType:    byteutils.SliceToString(meta[0]),
-			ReqID:      byteutils.SliceToString(meta[1]),
-			ReqTs:      byteutils.SliceToString(meta[2]),
-			ReqMethod:  byteutils.SliceToString(proto.Method(req)),
-			ReqBody:    byteutils.SliceToString(proto.Body(req)),
-			ReqHeaders: header,
-		}
-		jsonMessage, _ := json.Marshal(&kafkaMessage)
-		message = sarama.StringEncoder(byteutils.SliceToString(jsonMessage))
-	}
+	jsonMessage, _ := json.Marshal(&kafkaMessage)
+	message = sarama.StringEncoder(byteutils.SliceToString(jsonMessage))
 
 	o.producer.Input() <- &sarama.ProducerMessage{
-		Topic: o.config.Topic,
+		//SW TOPIC
+		Topic: "collector_api_access",
 		Value: message,
 	}
 

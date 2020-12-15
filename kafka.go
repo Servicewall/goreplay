@@ -30,6 +30,7 @@ type OutputKafkaConfig struct {
 	Host     string `json:"output-kafka-host"`
 	Topic    string `json:"output-kafka-topic"`
 	UseJSON  bool   `json:"output-kafka-json-format"`
+	SwSource string `json:"output-kafka-sw-source"` 	//SW format option
 }
 
 // KafkaTLSConfig should contains TLS certificates for connecting to secured Kafka clusters
