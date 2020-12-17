@@ -366,6 +366,8 @@ func (l *Listener) activatePcap() error {
 	var msg string
 	for _, ifi := range l.Interfaces {
 		var handle *pcap.Handle
+		//SW
+		println("SW-IF", ifi.Name)
 		handle, e = l.PcapHandle(ifi)
 		if e != nil {
 			msg += ("\n" + e.Error())
