@@ -25,6 +25,8 @@ type Stats struct {
 	TimedOut   bool // timeout before getting the whole message
 	Truncated  bool // last packet truncated due to max message size
 	IPversion  byte
+	//SW
+	FP string
 }
 
 // Message is the representation of a tcp message
@@ -38,13 +40,15 @@ type Message struct {
 }
 
 // NewMessage ...
-func NewMessage(srcAddr, dstAddr string, ipVersion uint8) (m *Message) {
+func NewMessage(srcAddr, dstAddr string, ipVersion uint8, fp string) (m *Message) {
 	m = new(Message)
 	m.DstAddr = dstAddr
 	m.SrcAddr = srcAddr
 	m.IPversion = ipVersion
 	m.done = make(chan bool)
 	m.buf = &bytes.Buffer{}
+	//SW
+	m.FP = fp
 	return
 }
 
@@ -192,12 +196,15 @@ func (pool *MessagePool) Handler(packet *capture.Packet) {
 		go pool.say(4, fmt.Sprintf("RST flag from %s to %s at %s\n", pckt.Src(), pckt.Dst(), pckt.Timestamp))
 		return
 	}
+	//SW
+	fp := ""
 	switch {
 	case ok:
 		pool.addPacket(m, pckt)
 		return
 	case pckt.SYN:
 		in = !pckt.ACK
+		fp = new(TcpSig).getSYNFp(pckt)
 	case pool.Start != nil:
 		if in, out = pool.Start(pckt); !(in || out) {
 			return
@@ -205,7 +212,8 @@ func (pool *MessagePool) Handler(packet *capture.Packet) {
 	default:
 		return
 	}
-	m = NewMessage(pckt.Src(), pckt.Dst(), pckt.Version)
+
+	m = NewMessage(pckt.Src(), pckt.Dst(), pckt.Version, fp)
 	m.IsIncoming = in
 	pool.pool[key] = m
 	m.Start = pckt.Timestamp

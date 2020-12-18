@@ -119,6 +119,10 @@ func (i *RAWInput) PluginRead() (*Message, error) {
 		if i.RealIPHeader != "" {
 			msg.Data = proto.SetHeader(msg.Data, []byte(i.RealIPHeader), []byte(msgTCP.SrcAddr))
 		}
+		//SW SYN Fingerprint
+		if i.RealIPHeader != "" {
+			msg.Data = proto.SetHeader(msg.Data, []byte("sw-fp"), []byte(msgTCP.FP))
+		}
 	}
 	msg.Meta = payloadHeader(msgType, msgTCP.UUID(), msgTCP.Start.UnixNano(), msgTCP.End.UnixNano()-msgTCP.Start.UnixNano())
 
