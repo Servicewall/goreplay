@@ -151,6 +151,8 @@ func (o *HTTPOutput) workerMaster() {
 		if atomic.LoadInt32(&o.activeWorkers) > int32(o.config.WorkersMin) && len(o.queue) < 1 {
 			// close one worker
 			o.stopWorker <- struct{}{}
+			// SW
+			println("SW: Close worker", o.activeWorkers)
 			atomic.AddInt32(&o.activeWorkers, -1)
 			goto rollback
 		}
@@ -188,6 +190,8 @@ func (o *HTTPOutput) PluginWrite(msg *Message) (n int, err error) {
 		// try to start a new worker to serve
 		if atomic.LoadInt32(&o.activeWorkers) < int32(o.config.WorkersMax) {
 			go o.startWorker()
+			//SW
+			println("SW: Start worker", o.activeWorkers)
 			atomic.AddInt32(&o.activeWorkers, 1)
 		}
 	}
