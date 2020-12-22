@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"runtime"
 	"strconv"
 	"time"
@@ -56,8 +57,18 @@ func (s *GorStat) String() string {
 
 func (s *GorStat) reportStats() {
 	Debug(0, "\n", s.statName+":latest,mean,max,count,count/second,gcount")
+	//SW
+	exitCnt := 0
 	for {
 		Debug(0, "\n", s)
+		//SW
+		if s.count == 0 {
+			exitCnt++
+			if exitCnt == 3 {
+				println("Let's restart!")
+				os.Exit(0)
+			}
+		}
 		s.Reset()
 		time.Sleep(time.Duration(s.rateMs) * time.Millisecond)
 	}
