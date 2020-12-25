@@ -58,6 +58,7 @@ type RAWInputConfig struct {
 	TrackResponse  bool               `json:"input-raw-track-response"`
 	Protocol       TCPProtocol        `json:"input-raw-protocol"`
 	RealIPHeader   string             `json:"input-raw-realip-header"`
+	TcpSignature   string             `json:"input-raw-tcp-signature"` //SW
 	Stats          bool               `json:"input-raw-stats"`
 	quit           chan bool          // Channel used only to indicate goroutine should shutdown
 	host           string
@@ -120,8 +121,8 @@ func (i *RAWInput) PluginRead() (*Message, error) {
 			msg.Data = proto.SetHeader(msg.Data, []byte(i.RealIPHeader), []byte(msgTCP.SrcAddr))
 		}
 		//SW SYN Fingerprint
-		if i.RealIPHeader != "" {
-			msg.Data = proto.SetHeader(msg.Data, []byte("sw-fp"), []byte(msgTCP.FP))
+		if i.TcpSignature != "" {
+			msg.Data = proto.SetHeader(msg.Data, []byte(i.TcpSignature), []byte(msgTCP.FP))
 		}
 	}
 	msg.Meta = payloadHeader(msgType, msgTCP.UUID(), msgTCP.Start.UnixNano(), msgTCP.End.UnixNano()-msgTCP.Start.UnixNano())

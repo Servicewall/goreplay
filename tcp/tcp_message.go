@@ -48,7 +48,12 @@ func NewMessage(srcAddr, dstAddr string, ipVersion uint8, fp string) (m *Message
 	m.done = make(chan bool)
 	m.buf = &bytes.Buffer{}
 	//SW
-	m.FP = fp
+	if fp != "" {
+		if m.FP != "" && m.FP != fp {
+			println("SW-ERR: signature changed")
+		}
+		m.FP = fp
+	}
 	return
 }
 
@@ -204,7 +209,7 @@ func (pool *MessagePool) Handler(packet *capture.Packet) {
 		return
 	case pckt.SYN:
 		in = !pckt.ACK
-		fp = new(TcpSig).getSYNFp(pckt)
+		fp = new(TcpSig).getSYNFp(packet)
 	case pool.Start != nil:
 		if in, out = pool.Start(pckt); !(in || out) {
 			return
